@@ -38,7 +38,7 @@ const BallPitCanvas = ({
   const mouseRef = useRef({ x: -1000, y: -1000 });
 
   const initBalls = useCallback((width: number, height: number) => {
-    const sizeRange = ballSize === "small" ? [2, 6] : ballSize === "large" ? [18, 42] : [4, 12];
+    const sizeRange = ballSize === "small" ? [4, 10] : ballSize === "large" ? [20, 48] : [10, 24];
     const balls: Ball[] = [];
     for (let i = 0; i < ballCount; i++) {
       const radius = sizeRange[0] + Math.random() * (sizeRange[1] - sizeRange[0]);

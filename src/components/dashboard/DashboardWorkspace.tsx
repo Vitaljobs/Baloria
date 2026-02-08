@@ -198,7 +198,7 @@ const DashboardHome = ({ onSectionChange }: { onSectionChange?: (section: string
           className="relative rounded-xl overflow-hidden cursor-pointer group"
           style={{ background: "#1E293B", border: "1px solid hsla(215, 25%, 22%, 0.5)", height: 200 }}
           onClick={() => setAskModalOpen(true)}>
-          <BallPitCanvas ballCount={25} gravity={0.02} friction={0.99} wallBounce={0.8} ballSize="small" />
+          <BallPitCanvas ballCount={18} gravity={0.02} friction={0.99} wallBounce={0.8} ballSize="medium" />
           <div className="absolute inset-0 flex flex-col items-center justify-end pb-4 bg-gradient-to-t from-[#0F172A]/90 to-transparent pointer-events-none">
             <p className="font-display font-bold text-sm" style={{ color: "#F1F5F9" }}>Ballebak</p>
             <p className="text-[11px]" style={{ color: "#94A3B8" }}>Klik om een bal te gooien</p>
