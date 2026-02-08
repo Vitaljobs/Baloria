@@ -1,0 +1,225 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Baloria Light Theme (used for non-dashboard pages) */
+    --background: 210 20% 98%;
+    --foreground: 222 84% 5%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 84% 5%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 84% 5%;
+
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 215 25% 27%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 215 20% 94%;
+    --muted-foreground: 215 16% 47%;
+
+    --accent: 215 20% 94%;
+    --accent-foreground: 222 47% 11%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 217 91% 60%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 222 47% 7%;
+    --sidebar-foreground: 213 31% 91%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 217 33% 17%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 215 25% 20%;
+    --sidebar-ring: 217 91% 60%;
+
+    /* Baloria Semantic Colors */
+    --success: 160 84% 39%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
+
+    /* Deep Space Dashboard (used via .dashboard class) */
+    --deep-bg: 222 47% 7%;
+    --deep-card: 215 25% 15%;
+    --deep-card-hover: 215 25% 18%;
+    --deep-border: 215 25% 22%;
+    --deep-text: 213 31% 91%;
+    --deep-text-muted: 215 20% 65%;
+
+    /* Ball Theme Colors */
+    --ball-red: 349 100% 71%;
+    --ball-orange: 25 100% 57%;
+    --ball-yellow: 47 100% 62%;
+    --ball-green: 135 50% 62%;
+    --ball-blue: 217 100% 65%;
+    --ball-purple: 271 70% 59%;
+    --ball-brown: 22 26% 50%;
+    --ball-dark: 0 0% 23%;
+
+    /* Special Ball Colors */
+    --ball-vacature: 200 100% 60%;
+    --ball-woning: 145 63% 49%;
+    --ball-opleiding: 48 87% 51%;
+    --ball-samenwerking: 282 39% 53%;
+  }
+
+  .dark {
+    --background: 222 47% 7%;
+    --foreground: 213 31% 91%;
+
+    --card: 215 25% 15%;
+    --card-foreground: 213 31% 91%;
+
+    --popover: 215 25% 15%;
+    --popover-foreground: 213 31% 91%;
+
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 217 33% 17%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 215 25% 22%;
+    --input: 215 25% 22%;
+    --ring: 217 91% 60%;
+
+    --sidebar-background: 222 47% 5%;
+    --sidebar-foreground: 213 31% 91%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 217 33% 14%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 215 25% 17%;
+    --sidebar-ring: 217 91% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Syne', 'Space Grotesk', sans-serif;
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: 'Syne', 'Space Grotesk', sans-serif;
+  }
+
+  .font-mono {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+  }
+
+  .glass {
+    @apply bg-white/5 backdrop-blur-xl border border-white/10;
+  }
+
+  .glass-dark {
+    background: hsla(var(--deep-card), 0.8);
+    backdrop-filter: blur(20px);
+    border: 1px solid hsla(var(--deep-border), 0.5);
+  }
+
+  .glow-primary {
+    box-shadow: 0 0 20px hsla(var(--primary), 0.3), 0 0 60px hsla(var(--primary), 0.1);
+  }
+
+  .glow-ball {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
+      inset 0 -8px 16px rgba(0, 0, 0, 0.2),
+      inset 0 8px 16px rgba(255, 255, 255, 0.1);
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(var(--ball-blue)), hsl(var(--ball-purple)), hsl(var(--ball-red)));
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Quill Editor Dark Mode Overrides */
+.ql-toolbar.ql-snow {
+  border: none !important;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1) !important;
+  background: rgba(30, 41, 59, 0.5);
+  border-top-left-radius: 0.75rem;
+  border-top-right-radius: 0.75rem;
+}
+
+.ql-container.ql-snow {
+  border: none !important;
+}
+
+.ql-editor {
+  min-height: 120px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+}
+
+.ql-snow .ql-stroke {
+  stroke: #94a3b8 !important;
+}
+
+.ql-snow .ql-fill {
+  fill: #94a3b8 !important;
+}
+
+.ql-snow .ql-picker {
+  color: #94a3b8 !important;
+}
+
+.ql-snow .ql-picker-options {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
