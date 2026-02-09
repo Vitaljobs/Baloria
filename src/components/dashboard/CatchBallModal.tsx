@@ -51,20 +51,27 @@ const CatchBallModal = ({ isOpen, onClose, onQuestionSelected }: CatchBallModalP
     const handleCategorySelect = async (category: typeof allCategories[number]) => {
         if (!projectId) return;
 
-        // Check if there are questions
-        if (!counts[category.name]) {
-            toast.info(`Geen open vragen in ${category.name}`);
-            return;
+        let queryCategory: string = category.name;
+        const currentCount = counts[category.name] || 0;
+
+        // Fallback logic: If less than 3 questions in category, pick random from any category
+        if (currentCount < 3) {
+            toast.info(`Weinig vragen in ${category.name}, we hebben een verrassing voor je!`);
+            queryCategory = ""; // Empty string for all categories
         }
 
         try {
-            const { data, error } = await supabase
+            let query = supabase
                 .from("baloria_questions")
-                .select("id")
+                .select("id, theme")
                 .eq("project_id", projectId)
-                .eq("theme", category.name)
-                .eq("status", "open")
-                .limit(50);
+                .eq("status", "open");
+
+            if (queryCategory) {
+                query = query.eq("theme", queryCategory);
+            }
+
+            const { data, error } = await query.limit(100);
 
             if (error) throw error;
 

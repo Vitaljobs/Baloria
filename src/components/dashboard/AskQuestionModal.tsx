@@ -11,6 +11,7 @@ import { useDailyQuota } from "@/hooks/useDailyQuota";
 import { useDailyChallenges } from "@/hooks/useDailyChallenges";
 import { useBadges } from "@/hooks/useBadges";
 import { useTags } from "@/hooks/useTags";
+import { useUserRole } from "@/hooks/useUserRole";
 import TagInput from "./TagInput";
 import { toast } from "sonner";
 import ReactQuill from "react-quill";
@@ -26,8 +27,9 @@ const allCategories = [...BALL_CATEGORIES, ...SPECIAL_BALLS];
 
 const AskQuestionModal = ({ isOpen, onClose, onQuestionPosted }: AskQuestionModalProps) => {
   const { user } = useAuth();
+  const { isAdmin } = useUserRole();
   const projectId = useBaloriaProject();
-  const { canAskQuestion, refetch: refetchQuota } = useDailyQuota();
+  const { canAskQuestion, quota, refetch: refetchQuota } = useDailyQuota();
   const { checkAction } = useDailyChallenges();
   const { checkBadges } = useBadges();
   const { createTag } = useTags();
@@ -74,8 +76,8 @@ const AskQuestionModal = ({ isOpen, onClose, onQuestionPosted }: AskQuestionModa
 
   const handleSubmit = async () => {
     if (!user || !projectId || !selectedCategory || !question.trim()) return;
-    if (!canAskQuestion) {
-      toast.error("Je dagelijks limiet is bereikt (3 vragen per dag)");
+    if (!canAskQuestion && !isAdmin) {
+      toast.error(`Je dagelijks limiet is bereikt (${quota.questionsMax} vragen per dag)`);
       return;
     }
     setSubmitting(true);

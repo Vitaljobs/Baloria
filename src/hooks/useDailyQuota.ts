@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { useUserRole } from "./useUserRole";
 
 interface DailyQuota {
   questionsUsed: number;
@@ -13,6 +14,7 @@ interface DailyQuota {
 
 export function useDailyQuota() {
   const { user } = useAuth();
+  const { isAdmin } = useUserRole();
   const [quota, setQuota] = useState<DailyQuota>({
     questionsUsed: 0,
     answersUsed: 0,
@@ -59,6 +61,21 @@ export function useDailyQuota() {
 
     const questionsUsed = qCount || 0;
     const answersUsed = aCount || 0;
+
+    // Admins get "unlimited" quota
+    if (isAdmin) {
+      setQuota({
+        questionsUsed,
+        answersUsed,
+        questionsMax: 9999,
+        answersMax: 9999,
+        questionsRemaining: 9999,
+        answersRemaining: 9999,
+      });
+      setLoading(false);
+      return;
+    }
+
     const baseQuota = 3; // Default daily limit
     const totalMax = baseQuota + bonusQuestions;
 
@@ -71,7 +88,7 @@ export function useDailyQuota() {
       answersRemaining: Math.max(0, 100 - answersUsed),
     });
     setLoading(false);
-  }, [user]);
+  }, [user, isAdmin]);
 
   useEffect(() => {
     fetchQuota();

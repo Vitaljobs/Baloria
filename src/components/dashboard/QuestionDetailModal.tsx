@@ -37,7 +37,13 @@ interface Question {
     author_profile?: {
         display_name: string;
         avatar_url: string;
+        is_verified?: boolean;
+        category_stats?: {
+            category_name: string;
+            level: number;
+        }[];
     };
+    is_ai_generated?: boolean;
 }
 
 interface Answer {
@@ -134,18 +140,33 @@ const QuestionDetailModal = ({ isOpen, onClose, questionId }: QuestionDetailModa
             if (!questionData.is_anonymous && questionData.author_id) {
                 const { data: profileData } = await supabase
                     .from("user_profiles")
-                    .select("display_name, avatar_url")
+                    .select("display_name, avatar_url, is_verified")
                     .eq("user_id", questionData.author_id)
                     .maybeSingle();
-                authorProfile = profileData;
+
+                if (profileData) {
+                    // Use any bypass for potential missing table in types
+                    const { data: statsData } = await (supabase
+                        .from("baloria_user_category_stats" as any) as any)
+                        .select("category_name, level")
+                        .eq("user_id", questionData.author_id)
+                        .eq("category_name", questionData.theme);
+
+                    const profileObj = (profileData as unknown) as { display_name: string; avatar_url: string; is_verified: boolean };
+
+                    authorProfile = {
+                        ...profileObj,
+                        category_stats: (statsData as any) || []
+                    };
+                }
             }
 
             setQuestion({
                 ...questionData,
                 author_profile: authorProfile,
-                // @ts-ignore - Supabase type inference for nested relations can be tricky
-                baloria_question_tags: questionData.baloria_question_tags
-            } as unknown as Question);
+                // @ts-ignore - Handle nested relation
+                baloria_question_tags: (questionData as any).baloria_question_tags
+            } as any);
 
             // Fetch answers
             const { data: answersData, error: aError } = await supabase
@@ -328,7 +349,7 @@ const QuestionDetailModal = ({ isOpen, onClose, questionId }: QuestionDetailModa
                             <Loader2 className="w-8 h-8 animate-spin" style={{ color: "#4D96FF" }} />
                         </div>
                     ) : isSuccessView && question ? (
-                         <div className="p-8 text-center flex flex-col items-center justify-center min-h-[400px]">
+                        <div className="p-8 text-center flex flex-col items-center justify-center min-h-[400px]">
                             <div className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center mb-6">
                                 <Check className="w-10 h-10 text-green-500" />
                             </div>
@@ -347,9 +368,9 @@ const QuestionDetailModal = ({ isOpen, onClose, questionId }: QuestionDetailModa
                                         className="gap-2 w-full border-slate-700 bg-slate-800/50 hover:bg-slate-800 text-slate-200"
                                     >
                                         {question.author_profile.avatar_url && (
-                                            <img 
-                                                src={question.author_profile.avatar_url} 
-                                                alt="Avatar" 
+                                            <img
+                                                src={question.author_profile.avatar_url}
+                                                alt="Avatar"
                                                 className="w-5 h-5 rounded-full object-cover"
                                             />
                                         )}
@@ -376,6 +397,11 @@ const QuestionDetailModal = ({ isOpen, onClose, questionId }: QuestionDetailModa
                                         >
                                             {question.theme}
                                         </span>
+                                        {question.is_ai_generated && (
+                                            <span className="rounded-full px-2 py-0.5 text-[10px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                                                AI Generated
+                                            </span>
+                                        )}
                                         <span className="flex items-center gap-1 text-xs" style={{ color: "#64748B" }}>
                                             <Clock className="w-3 h-3" />
                                             {formatDistanceToNow(new Date(question.created_at), { locale: nl, addSuffix: true })}
@@ -398,6 +424,16 @@ const QuestionDetailModal = ({ isOpen, onClose, questionId }: QuestionDetailModa
                                                     />
                                                 )}
                                                 {question.author_profile.display_name}
+                                                {question.author_profile.is_verified && (
+                                                    <div className="bg-blue-500 rounded-full p-0.5">
+                                                        <Check className="w-2.5 h-2.5 text-white" />
+                                                    </div>
+                                                )}
+                                                {question.author_profile.category_stats && question.author_profile.category_stats.length > 0 && (
+                                                    <span className="text-[10px] bg-amber-500/10 text-amber-500 border border-amber-500/20 px-1.5 py-0.5 rounded ml-1">
+                                                        Lvl {question.author_profile.category_stats[0].level} Expert
+                                                    </span>
+                                                )}
                                             </button>
                                             <button
                                                 onClick={toggleFollow}

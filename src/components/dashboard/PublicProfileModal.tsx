@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useBaloriaProject } from "@/hooks/useBaloriaProject";
 import { useFollows } from "@/hooks/useFollows";
 import { useAuth } from "@/hooks/useAuth";
+import { useBadges } from "@/hooks/useBadges";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import BadgeDisplay from "./BadgeDisplay";
@@ -25,6 +26,13 @@ interface PublicProfile {
     visible_id: string | null;
     avatar_url: string | null;
     created_at: string | null;
+    is_verified?: boolean;
+}
+
+interface CategoryStat {
+    category_name: string;
+    level: number;
+    points: number;
 }
 
 interface ProfileStats {
@@ -42,9 +50,11 @@ const PublicProfileModal = ({ isOpen, onClose, userId }: PublicProfileModalProps
     const [stats, setStats] = useState<ProfileStats | null>(null);
     const [loading, setLoading] = useState(true);
     const [copied, setCopied] = useState(false);
+    const [categoryStats, setCategoryStats] = useState<CategoryStat[]>([]);
 
     // We only use the hook if userId is present, otherwise pass undefined to avoid errors
     const { isFollowing, toggleFollow, followersCount, followingCount } = useFollows(userId || undefined);
+    const { badges, loading: badgesLoading } = useBadges();
 
     const fetchProfile = useCallback(async () => {
         if (!userId || !projectId) return;
@@ -81,6 +91,17 @@ const PublicProfileModal = ({ isOpen, onClose, userId }: PublicProfileModalProps
                     points: 0,
                     level: 1
                 });
+            }
+
+            // Fetch category expertise stats
+            const { data: catStats, error: catError } = await supabase
+                .from("baloria_user_category_stats" as any)
+                .select("category_name, level, points")
+                .eq("user_id", userId)
+                .order("level", { ascending: false });
+
+            if (!catError && catStats) {
+                setCategoryStats(catStats as CategoryStat[]);
             }
 
         } catch (err) {
@@ -173,8 +194,8 @@ const PublicProfileModal = ({ isOpen, onClose, userId }: PublicProfileModalProps
                                         <Button
                                             onClick={toggleFollow}
                                             className={`gap-2 rounded-lg transition-all ${isFollowing
-                                                    ? "bg-slate-700 hover:bg-slate-600 text-slate-200"
-                                                    : "bg-primary hover:bg-primary/90 text-white"
+                                                ? "bg-slate-700 hover:bg-slate-600 text-slate-200"
+                                                : "bg-primary hover:bg-primary/90 text-white"
                                                 }`}
                                         >
                                             {isFollowing ? (
@@ -195,10 +216,15 @@ const PublicProfileModal = ({ isOpen, onClose, userId }: PublicProfileModalProps
                                         <h2 className="text-2xl font-display font-bold" style={{ color: "#F1F5F9" }}>
                                             {displayName}
                                         </h2>
+                                        {profile.is_verified && (
+                                            <div className="bg-blue-500 rounded-full p-0.5" title="Geverifieerd">
+                                                <Check className="w-3 h-3 text-white" />
+                                            </div>
+                                        )}
                                         {stats && (
                                             <span className="text-xs px-2 py-0.5 rounded-full font-bold"
                                                 style={{ background: "#FFD93D20", color: "#FFD93D" }}>
-                                                Level {stats.level}
+                                                Lvl {stats.level}
                                             </span>
                                         )}
                                     </div>
@@ -245,8 +271,26 @@ const PublicProfileModal = ({ isOpen, onClose, userId }: PublicProfileModalProps
                                 {/* Badges */}
                                 <div>
                                     <h3 className="text-sm font-semibold mb-3" style={{ color: "#F1F5F9" }}>Badges</h3>
-                                    <BadgeDisplay userId={userId} />
+                                    <BadgeDisplay badges={badges} loading={badgesLoading} />
                                 </div>
+
+                                {/* Category Expertise */}
+                                {categoryStats.length > 0 && (
+                                    <div className="mt-6">
+                                        <h3 className="text-sm font-semibold mb-3 flex items-center gap-2" style={{ color: "#F1F5F9" }}>
+                                            <Star className="w-4 h-4 text-yellow-500" /> Expertise
+                                        </h3>
+                                        <div className="flex flex-wrap gap-2">
+                                            {categoryStats.map((cs) => (
+                                                <div key={cs.category_name}
+                                                    className="px-3 py-1.5 rounded-lg bg-slate-800/40 border border-slate-700/50 flex items-center gap-2">
+                                                    <span className="text-xs font-medium text-slate-300">{cs.category_name}</span>
+                                                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400 font-bold">Lvl {cs.level}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
 
                             </div>
                         </>

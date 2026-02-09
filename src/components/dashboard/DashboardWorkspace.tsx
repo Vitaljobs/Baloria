@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   TrendingUp, Users, MessageCircle, CircleDot, Bell,
-  ArrowUpRight, ArrowDownRight, Activity, Zap, Star,
+  ArrowUpRight, ArrowDownRight, Activity, Zap, Star, Trophy,
   Award, Flame, Crown, Target, Plus, Loader2,
 } from "lucide-react";
 import BallPitCanvas from "@/components/landing/BallPitCanvas";
@@ -18,6 +18,9 @@ import LeaderboardSection from "./sections/LeaderboardSection";
 import AskQuestionModal from "./AskQuestionModal";
 import NotificationBell from "./NotificationBell";
 import GlobalSearch from "./GlobalSearch";
+import { useNavigate } from "react-router-dom";
+import { useAIQuestions } from "@/hooks/useAIQuestions";
+import { useUserRole } from "@/hooks/useUserRole";
 import QuestionDetailModal from "./QuestionDetailModal";
 import CatchBallModal from "./CatchBallModal";
 import { toast } from "sonner";
@@ -49,7 +52,7 @@ const StatCard = ({ title, value, change, positive, icon: Icon, color }: StatCar
     style={{ background: "#1E293B", border: "1px solid hsla(215, 25%, 22%, 0.5)" }}
   >
     <div className="flex items-start justify-between mb-2">
-      <div className="flex h-9 w-9 items-center justify-center rounded-lg" style={{ background: `${color}20` }}>
+      <div className="flex h-9 w-9 items-center justify-center rounded-lg" style={{ background: `${color} 20` }}>
         <Icon className="w-4 h-4" style={{ color }} />
       </div>
       <span
@@ -65,8 +68,27 @@ const StatCard = ({ title, value, change, positive, icon: Icon, color }: StatCar
   </motion.div>
 );
 
+interface QuickActionButtonProps {
+  icon: React.ElementType;
+  label: string;
+  onClick: () => void;
+  color: string;
+}
+
+const QuickActionButton = ({ icon: Icon, label, onClick, color }: QuickActionButtonProps) => (
+  <button
+    onClick={onClick}
+    className="flex flex-col items-center justify-center p-3 rounded-lg transition-all hover:scale-105"
+    style={{ background: `${color} 10`, border: `1px solid ${color} 20` }}
+  >
+    <Icon className="w-5 h-5 mb-1" style={{ color }} />
+    <span className="text-[10px] font-medium" style={{ color: "#F1F5F9" }}>{label}</span>
+  </button>
+);
+
 const DashboardHome = ({ onSectionChange }: { onSectionChange?: (section: string) => void }) => {
   const { user } = useAuth();
+  const { isAdmin } = useUserRole();
   const projectId = useBaloriaProject();
   const [askModalOpen, setAskModalOpen] = useState(false);
   const [onboardingOpen, setOnboardingOpen] = useState(false);
@@ -77,8 +99,25 @@ const DashboardHome = ({ onSectionChange }: { onSectionChange?: (section: string
   const [trending, setTrending] = useState<Array<{ topic: string; count: number; color: string }>>([]);
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(null);
   const [catchModalOpen, setCatchModalOpen] = useState(false);
+  const [dailyQuote, setDailyQuote] = useState<{ quote: string, author: string } | null>(null);
+  const { generateDailyQuestions } = useAIQuestions();
+  const navigate = useNavigate();
 
   const { checkAction } = useDailyChallenges();
+
+  // Fetch daily quote
+  useEffect(() => {
+    const quotes = [
+      { quote: "De enige manier om geweldig werk te doen, is door te houden van wat je doet.", author: "Steve Jobs" },
+      { quote: "Het leven is wat er gebeurt terwijl je andere plannen maakt.", author: "John Lennon" },
+      { quote: "Succes is niet de sleutel tot geluk. Geluk is de sleutel tot succes.", author: "Albert Schweitzer" },
+      { quote: "De toekomst behoort aan hen die geloven in de schoonheid van hun dromen.", author: "Eleanor Roosevelt" },
+      { quote: "Blijf hongerig, blijf dwaas.", author: "Steve Jobs" }
+    ];
+    const today = new Date().toDateString();
+    const index = Math.abs(today.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0)) % quotes.length;
+    setDailyQuote(quotes[index]);
+  }, []);
 
   const handleQuestionSelected = (id: string) => {
     setSelectedQuestionId(id);
@@ -130,7 +169,7 @@ const DashboardHome = ({ onSectionChange }: { onSectionChange?: (section: string
         .select("onboarding_completed")
         .eq("user_id", user.id)
         .eq("project_id", projectId)
-        .maybeSingle();
+        .maybeSingle() as { data: { onboarding_completed: boolean } | null };
 
       if (data && !data.onboarding_completed) {
         setOnboardingOpen(true);
@@ -153,16 +192,16 @@ const DashboardHome = ({ onSectionChange }: { onSectionChange?: (section: string
 
   const stats: StatCardProps[] = [
     { title: "Actieve Ballen", value: totalBalls.toLocaleString(), change: "live", positive: true, icon: CircleDot, color: "#4D96FF" },
-    { title: "Beantwoord", value: karmaStats ? karmaStats.answers_count.toLocaleString() : "—", change: karmaStats ? `${karmaStats.answers_count}` : "—", positive: true, icon: MessageCircle, color: "#10B981" },
-    { title: "Hearts", value: karmaStats ? karmaStats.hearts_received.toLocaleString() : "—", change: karmaStats ? `${karmaStats.hearts_received}` : "—", positive: true, icon: Users, color: "#9D4EDD" },
-    { title: "Karma Score", value: karmaStats ? karmaStats.points.toLocaleString() : "—", change: karmaStats && karmaStats.streak_days > 0 ? `🔥 ${karmaStats.streak_days}d` : "—", positive: true, icon: Star, color: "#FFD93D" },
+    { title: "Beantwoord", value: karmaStats ? karmaStats.answers_count.toLocaleString() : "—", change: karmaStats ? `${karmaStats.answers_count} ` : "—", positive: true, icon: MessageCircle, color: "#10B981" },
+    { title: "Hearts", value: karmaStats ? karmaStats.hearts_received.toLocaleString() : "—", change: karmaStats ? `${karmaStats.hearts_received} ` : "—", positive: true, icon: Users, color: "#9D4EDD" },
+    { title: "Karma Score", value: karmaStats ? karmaStats.points.toLocaleString() : "—", change: karmaStats && karmaStats.streak_days > 0 ? `🔥 ${karmaStats.streak_days} d` : "—", positive: true, icon: Star, color: "#FFD93D" },
   ];
 
   const rewards = [
-    { label: "Rang", value: karmaStats ? getLevelName(karmaStats.level) : "—", icon: Crown, color: "#FFD93D", sub: karmaStats ? `Level ${karmaStats.level}` : "" },
-    { label: "Streak", value: karmaStats ? `${karmaStats.streak_days} dagen` : "—", icon: Flame, color: "#FF9F43", sub: karmaStats && karmaStats.streak_days >= 7 ? "🔥 Op dreef!" : "Blijf actief!" },
+    { label: "Rang", value: karmaStats ? getLevelName(karmaStats.level) : "—", icon: Crown, color: "#FFD93D", sub: karmaStats ? `Level ${karmaStats.level} ` : "" },
+    { label: "Streak", value: karmaStats ? `${karmaStats.streak_days} 🔥` : "—", icon: Flame, color: "#FF9F43", sub: karmaStats && karmaStats.streak_days >= 7 ? "Op dreef!" : "Blijf actief!" },
     { label: "Volgend Level", value: karmaStats ? `${getPointsToNextLevel()} pts` : "—", icon: Award, color: "#4D96FF", sub: `${Math.round(getProgressToNextLevel())}% klaar` },
-    { label: "Dagelijks", value: `${quota.questionsRemaining}Q / ${quota.answersRemaining}A`, icon: Target, color: "#10B981", sub: "Resterend" },
+    { label: "Dagelijks", value: `${quota.questionsRemaining} Q / ${quota.answersRemaining} A`, icon: Target, color: "#10B981", sub: "Resterend" },
   ];
 
   return (
@@ -215,8 +254,8 @@ const DashboardHome = ({ onSectionChange }: { onSectionChange?: (section: string
           <div className="grid grid-cols-2 gap-3">
             {rewards.map((r) => (
               <div key={r.label} className="flex items-center gap-3 rounded-lg p-3"
-                style={{ background: `${r.color}08`, border: `1px solid ${r.color}15` }}>
-                <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: `${r.color}20` }}>
+                style={{ background: `${r.color}08`, border: `1px solid ${r.color} 15` }}>
+                <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ background: `${r.color} 20` }}>
                   <r.icon className="w-4 h-4" style={{ color: r.color }} />
                 </div>
                 <div>
@@ -250,6 +289,30 @@ const DashboardHome = ({ onSectionChange }: { onSectionChange?: (section: string
               ))
             )}
           </div>
+          <div className="grid grid-cols-2 gap-2 mt-4">
+            <QuickActionButton
+              icon={Trophy}
+              label="Leaderboard"
+              onClick={() => onSectionChange?.('leaderboard')}
+              color="#FFBB5C"
+            />
+            {isAdmin && (
+              <QuickActionButton
+                icon={Star}
+                label="Generate AI"
+                onClick={() => generateDailyQuestions()}
+                color="#4D96FF"
+              />
+            )}
+          </div>
+          {isAdmin && (
+            <div className="mt-3 p-2 rounded bg-blue-500/10 border border-blue-500/20 flex items-center gap-2">
+              <Bell className="w-3 h-3 text-blue-400" />
+              <p className="text-[10px] text-blue-300">
+                AI vragen worden dagelijks automatisch op de achtergrond gegenereerd.
+              </p>
+            </div>
+          )}
         </motion.div>
       </div>
 
@@ -259,9 +322,9 @@ const DashboardHome = ({ onSectionChange }: { onSectionChange?: (section: string
           <h3 className="font-display font-semibold mb-4" style={{ color: "#F1F5F9" }}>Dagelijks Quotum</h3>
           <div className="space-y-3">
             {[
-              { label: "Vragen gesteld", current: `${quota.questionsUsed} / ${quota.questionsMax}`, pct: `${(quota.questionsUsed / quota.questionsMax) * 100}%`, gradient: "linear-gradient(90deg, #4D96FF, #36B5FF)" },
-              { label: "Antwoorden gegeven", current: `${quota.answersUsed} / ${quota.answersMax}`, pct: `${(quota.answersUsed / quota.answersMax) * 100}%`, gradient: "linear-gradient(90deg, #10B981, #6BCF7F)" },
-              { label: "Karma vandaag", current: karmaStats ? `+${karmaStats.points}` : "—", pct: `${Math.min(100, getProgressToNextLevel())}%`, gradient: "linear-gradient(90deg, #FFD93D, #FF9F43)" },
+              { label: "Vragen gesteld", current: `${quota.questionsUsed} / ${quota.questionsMax}`, pct: `${(quota.questionsUsed / quota.questionsMax) * 100}% `, gradient: "linear-gradient(90deg, #4D96FF, #36B5FF)" },
+              { label: "Antwoorden gegeven", current: `${quota.answersUsed} / ${quota.answersMax}`, pct: `${(quota.answersUsed / quota.answersMax) * 100}% `, gradient: "linear-gradient(90deg, #10B981, #6BCF7F)" },
+              { label: "Karma vandaag", current: karmaStats ? `+ ${karmaStats.points} ` : "—", pct: `${Math.min(100, getProgressToNextLevel())}% `, gradient: "linear-gradient(90deg, #FFD93D, #FF9F43)" },
             ].map((bar, i) => (
               <div key={bar.label}>
                 <div className="flex justify-between text-xs mb-1">
@@ -301,20 +364,31 @@ const DashboardHome = ({ onSectionChange }: { onSectionChange?: (section: string
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
-          className="rounded-xl p-5" style={{ background: "#1E293B", border: "1px solid hsla(215, 25%, 22%, 0.5)" }}>
-          <h3 className="font-display font-semibold mb-4" style={{ color: "#F1F5F9" }}>Snelle Acties</h3>
-          <div className="grid grid-cols-2 gap-2">
+          className="rounded-xl p-5 flex flex-col" style={{ background: "#1E293B", border: "1px solid hsla(215, 25%, 22%, 0.5)" }}>
+          <h3 className="font-display font-semibold mb-3" style={{ color: "#F1F5F9" }}>Dagelijkse Quote</h3>
+
+          {dailyQuote && (
+            <div className="flex-1 flex flex-col justify-center mb-4 p-3 rounded-lg bg-white/5 border border-white/10 relative italic">
+              <span className="absolute -top-2 -left-1 text-2xl text-primary/40">"</span>
+              <p className="text-xs leading-relaxed mb-2" style={{ color: "#E2E8F0" }}>
+                {dailyQuote.quote}
+              </p>
+              <p className="text-[10px] text-right font-semibold" style={{ color: "#4D96FF" }}>
+                — {dailyQuote.author}
+              </p>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-2 mt-auto">
             {[
-              { label: "Vraag Stellen", icon: CircleDot, color: "#FF6B8B", action: () => setAskModalOpen(true) },
-              { label: "Chat", icon: MessageCircle, color: "#4D96FF", action: () => onSectionChange?.("chat") },
-              { label: "Vang een Bal", icon: Target, color: "#10B981", action: () => setCatchModalOpen(true) },
-              { label: "Inbox", icon: Zap, color: "#FFD93D", action: () => onSectionChange?.("inbox") },
+              { label: "Vraag", icon: CircleDot, color: "#FF6B8B", action: () => setAskModalOpen(true) },
+              { label: "Vang Bal", icon: Target, color: "#10B981", action: () => setCatchModalOpen(true) },
             ].map((action) => (
               <button key={action.label} onClick={action.action}
-                className="flex flex-col items-center gap-2 rounded-lg p-3 transition-all hover:scale-105"
-                style={{ background: `${action.color}10`, border: `1px solid ${action.color}20` }}>
-                <action.icon className="w-5 h-5" style={{ color: action.color }} />
-                <span className="text-xs font-medium" style={{ color: "#94A3B8" }}>{action.label}</span>
+                className="flex items-center justify-center gap-2 rounded-lg py-2 px-3 transition-all hover:scale-105"
+                style={{ background: `${action.color} 10`, border: `1px solid ${action.color} 20` }}>
+                <action.icon className="w-4 h-4" style={{ color: action.color }} />
+                <span className="text-[11px] font-medium" style={{ color: "#F1F5F9" }}>{action.label}</span>
               </button>
             ))}
           </div>
